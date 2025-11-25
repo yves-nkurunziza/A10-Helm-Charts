@@ -8,6 +8,7 @@ metadata:
   labels:
     {{- include "a10-slb.labels" . | nindent 4 }}
 spec:
+  name: {{ .Values.serviceGroup.name | quote }}
   protocol: {{ .Values.serviceGroup.protocol | quote }}
   loadBalanceMethod: {{ .Values.serviceGroup.lbMethod | quote }}
   service: {{ printf "%s/%s" .Values.serviceGroup.serviceRef.namespace .Values.serviceGroup.serviceRef.name | quote }}

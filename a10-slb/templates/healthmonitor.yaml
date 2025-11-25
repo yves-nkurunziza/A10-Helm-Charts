@@ -8,6 +8,7 @@ metadata:
   labels:
     {{- include "a10-slb.labels" . | nindent 4 }}
 spec:
+  name: {{ .Values.healthMonitor.name | quote }}
   type: {{ .Values.healthMonitor.type | quote }}
   interval: {{ .Values.healthMonitor.interval }}
   timeout: {{ .Values.healthMonitor.timeout }}

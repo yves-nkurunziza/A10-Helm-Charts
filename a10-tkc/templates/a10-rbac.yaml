@@ -67,14 +67,35 @@ rules:
 - apiGroups:
   - tkc.a10networks.com
   resources:
+  # Core SLB Resources
   - virtualservers
   - servicegroups
   - healthmonitors
   - virtualports
+  # SSL/TLS Resources
   - sslcerts
   - ssltemplates
+  - clientssls
+  - serverssls
+  # Template Resources
+  - templateexternalservices
+  - templatepolicies
+  - templatepersistsourceips
+  - templatepersistcookies
+  - templatetcpproxies
+  - templatetcps
+  - templateudps
+  - templatehttps
+  - templatevirtualports
+  - templateservers
+  # NAT and Persistence
   - natpools
   - persistencetemplates
+  # Access Control
+  - accessliststandards
+  - accesslistextendeds
+  # Health Monitoring
+  - healthmonitortemplates
   verbs:
   - get
   - list
@@ -86,10 +107,17 @@ rules:
 - apiGroups:
   - tkc.a10networks.com
   resources:
+  # Status subresources for all CRDs
   - virtualservers/status
   - servicegroups/status
   - healthmonitors/status
   - virtualports/status
+  - clientssls/status
+  - serverssls/status
+  - templateexternalservices/status
+  - templatepolicies/status
+  - natpools/status
+  - accessliststandards/status
   verbs:
   - update
   - patch
