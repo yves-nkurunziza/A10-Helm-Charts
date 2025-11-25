@@ -15,11 +15,29 @@ rules:
   - services
   - endpoints
   - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - configmaps
   verbs:
   - get
   - list
   - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
 - apiGroups:
   - ""
   resources:
@@ -86,8 +104,12 @@ rules:
   - templatetcps
   - templateudps
   - templatehttps
+  - templatehttppolicies
   - templatevirtualports
   - templateservers
+  - templateslbservers
+  - templateports
+  - templateciphers
   # NAT and Persistence
   - natpools
   - persistencetemplates
@@ -96,6 +118,12 @@ rules:
   - accesslistextendeds
   # Health Monitoring
   - healthmonitortemplates
+  # IP Pool Management
+  - a10ippools
+  # HA Configuration
+  - activeactivehadevices
+  # Deployment Configuration
+  - deploymentconfigs
   verbs:
   - get
   - list

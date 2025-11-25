@@ -8,7 +8,6 @@ metadata:
   labels:
     {{- include "a10-slb.labels" . | nindent 4 }}
 spec:
-  name: {{ .Values.virtualPort.name | quote }}
   virtualServer: {{ .Values.virtualPort.virtualServerName | quote }}
   port: {{ .Values.virtualPort.port }}
   protocol: {{ .Values.virtualPort.protocol | quote }}
