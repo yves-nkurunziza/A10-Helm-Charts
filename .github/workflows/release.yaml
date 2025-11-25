@@ -10,9 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
+    
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -24,42 +27,31 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
-          version: v3.12.0
+          version: v3.13.0
 
-      - name: Package Helm Charts
+      - name: Lint Charts
         run: |
-          mkdir -p .cr-release-packages
-          helm package a10-tkc -d .cr-release-packages
-          helm package a10-slb -d .cr-release-packages
+          helm lint a10-tkc
+          helm lint a10-slb
 
-      - name: Create GitHub Releases
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package Charts
         run: |
-          for pkg in .cr-release-packages/*.tgz; do
-            chart=$(basename $pkg .tgz)
-            gh release create $chart $pkg --generate-notes || echo "Release exists"
-          done
+          mkdir -p .deploy/charts
+          helm package a10-tkc -d .deploy/charts
+          helm package a10-slb -d .deploy/charts
 
-      - name: Update Helm Index
+      - name: Generate Index
+        run: |
+          helm repo index .deploy/charts --url https://yves-nkurunziza.github.io/A10-Helm-Charts/charts
+
+      - name: Deploy to GitHub Pages
         run: |
           git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
-          git rm -rf . || true
-          git clean -fdx
+          git rm -rf . 2>/dev/null || true
           
-          # Download all release assets
-          mkdir -p charts
-          gh release list | awk '{print $1}' | while read tag; do
-            gh release download $tag -D charts || true
-          done
+          cp -r .deploy/charts .
+          cp .deploy/charts/index.yaml .
           
-          # Generate index
-          helm repo index charts --url https://yves-nkurunziza.github.io/A10-Helm-Charts/charts
-          mv charts/index.yaml .
-          
-          # Commit and push
-          git add charts/ index.yaml
-          git commit -m "Update Helm repository" || true
+          git add -A
+          git commit -m "Release charts - $(date '+%Y-%m-%d %H:%M:%S')"
           git push origin gh-pages --force
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
