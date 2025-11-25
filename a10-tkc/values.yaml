@@ -7,7 +7,6 @@ replicaCount: 1
 image:
   repository: a10networks/tkc
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion
   tag: ""
 
 imagePullSecrets: []
@@ -15,35 +14,33 @@ nameOverride: ""
 fullnameOverride: ""
 
 # Service Account Configuration
+# Automatically creates a ServiceAccount with proper RBAC bindings
 serviceAccount:
-  # Specifies whether a service account should be created
   create: true
-  # Automatically mount a ServiceAccount's API credentials
   automount: true
-  # Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use
-  # If not set and create is true, a name is generated using the fullname template
   name: ""
 
 # RBAC Configuration
+# Creates ClusterRole and ClusterRoleBinding for TKC operator
 rbac:
-  # Specifies whether RBAC resources should be created
   create: true
 
-# Pod annotations
 podAnnotations: {}
 
 # Pod Disruption Budget
+# Ensures availability during cluster operations
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
 
 # Network Policy
+# Restricts egress to Thunder ADC, Kubernetes API, and DNS only
 networkPolicy:
   enabled: true
 
 # Pre-Install Validation
+# Validates Thunder ADC connectivity before installation
 preInstallValidation:
   enabled: false
 
@@ -52,29 +49,21 @@ serviceMonitor:
   enabled: false
 
 # A10 Thunder ADC Configuration
+# Management interface connection details
 thunder:
-  # Thunder ADC management IP address or hostname
-  host: "192.168.10.10"
-  # Thunder ADC management port
+  host: "192.168.122.211"
   port: 443
-  # Thunder ADC admin username
   username: "admin"
-  # Thunder ADC admin password
-  password: "a10"
-  # Protocol for Thunder ADC communication
+  password: "Clezionh25!1"
   protocol: "https"
-  # The name of the partition to use on the A10 Thunder device
   partition: "shared"
 
 # A10 TKC Specific Configuration
+# Log level: DEBUG, INFO, WARNING, ERROR
+# watchNamespaces: empty list means watch all namespaces
 tkc:
-  # Log level for the connector (INFO, DEBUG, WARNING, ERROR)
   logLevel: "INFO"
-  # Whitelist of namespaces for the connector to watch
-  # Empty list means all namespaces
   watchNamespaces: []
-  # TKC deployment namespace
-  namespace: "default"
 
 # Resource limits and requests
 resources:
@@ -85,13 +74,7 @@ resources:
     cpu: "250m"
     memory: "256Mi"
 
-# Node selector for pod placement
+# Pod scheduling configuration
 nodeSelector: {}
-
-# Tolerations for pod scheduling
 tolerations: []
-
-# Affinity rules for pod scheduling
 affinity: {}
-
-

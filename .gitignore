@@ -1,0 +1,21 @@
+# Helm chart packaging
+*.tgz
+charts/
+
+# Temporary files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+
+# Helm generated
+*.lock
+
+# Secrets (just in case)
+secrets.yaml
+override-values.yaml
+*.local.yaml
