@@ -60,6 +60,8 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: CONTROLLER_URL
+        - name: ACOS_USERNAME_PASSWORD_SECRETNAME
+          value: {{ include "a10-tkc.fullname" . }}-secret
           value: {{ .Values.thunder.protocol }}://{{ .Values.thunder.host }}
         - name: THUNDER_HOST
           value: {{ .Values.thunder.host | quote }}
