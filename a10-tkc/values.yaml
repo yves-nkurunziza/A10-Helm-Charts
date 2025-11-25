@@ -5,9 +5,9 @@ replicaCount: 1
 
 # TKC Container Image Configuration
 image:
-  repository: a10networks/tkc
+  repository: a10networks/a10-kubernetes-connector
   pullPolicy: IfNotPresent
-  tag: ""
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
