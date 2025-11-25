@@ -2,7 +2,7 @@ apiVersion: v2
 name: a10-tkc
 description: A Helm chart for deploying A10 Thunder Kubernetes Connector (TKC)
 type: application
-version: 1.0.3
+version: 1.0.5
 appVersion: "1.11.0.0"
 icon: https://www.a10networks.com/wp-content/uploads/A10-Networks-logo.svg
 keywords:
