@@ -11,7 +11,7 @@ spec:
   name: {{ .Values.serviceGroup.name | quote }}
   protocol: {{ .Values.serviceGroup.protocol | quote }}
   loadBalanceMethod: {{ .Values.serviceGroup.lbMethod | quote }}
-  service: {{ printf "%s/%s" .Values.serviceGroup.serviceRef.namespace .Values.serviceGroup.serviceRef.name | quote }}
+  service: {{ .Values.serviceGroup.serviceRef.name | quote }}
   {{- if .Values.serviceGroup.healthMonitor }}
   healthCheck: {{ .Values.serviceGroup.healthMonitor | quote }}
   {{- end }}
