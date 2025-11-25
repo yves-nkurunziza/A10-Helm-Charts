@@ -8,5 +8,6 @@ metadata:
   labels:
     {{- include "a10-slb.labels" . | nindent 4 }}
 spec:
+  name: {{ .Values.virtualServer.name | quote }}
   ip-address: {{ .Values.virtualServer.ipAddress | quote }}
 {{- end }}

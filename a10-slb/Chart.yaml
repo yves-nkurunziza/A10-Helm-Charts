@@ -2,7 +2,7 @@ apiVersion: v2
 name: a10-slb
 description: A10 Thunder Server Load Balancer configuration resources
 type: application
-version: 1.0.2
+version: 1.0.3
 appVersion: "1.0.0"
 keywords:
   - a10
