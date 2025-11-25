@@ -1,0 +1,52 @@
+{{- if .Values.preInstallValidation.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "a10-tkc.fullname" . }}-pre-install
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-tkc.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "a10-tkc.fullname" . }}-pre-install
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: validate
+        image: curlimages/curl:latest
+        env:
+        - name: THUNDER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "a10-tkc.fullname" . }}-secret
+              key: username
+        - name: THUNDER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "a10-tkc.fullname" . }}-secret
+              key: password
+        command: ['/bin/sh', '-c']
+        args:
+        - |
+          set -e
+          echo "Validating Thunder ADC connectivity..."
+          
+          if ! curl -k -f -m 10 -u "${THUNDER_USERNAME}:${THUNDER_PASSWORD}" \
+            https://{{ .Values.thunder.host }}:{{ .Values.thunder.port }}/axapi/v3/system 2>/dev/null; then
+            echo "ERROR: Cannot reach Thunder ADC at {{ .Values.thunder.host }}:{{ .Values.thunder.port }}"
+            echo "Please verify:"
+            echo "  1. Thunder ADC is running"
+            echo "  2. Management interface is accessible"
+            echo "  3. Credentials are correct"
+            echo "  4. Firewall allows connectivity"
+            exit 1
+          fi
+          
+          echo "Thunder ADC connectivity validated successfully"
+{{- end }}

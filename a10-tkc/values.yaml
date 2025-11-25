@@ -1,0 +1,97 @@
+# Default values for a10-tkc Helm chart
+
+# Replica count for TKC deployment
+replicaCount: 1
+
+# TKC Container Image Configuration
+image:
+  repository: a10networks/tkc
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Service Account Configuration
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# RBAC Configuration
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Network Policy
+networkPolicy:
+  enabled: true
+
+# Pre-Install Validation
+preInstallValidation:
+  enabled: false
+
+# ServiceMonitor for Prometheus Operator
+serviceMonitor:
+  enabled: false
+
+# A10 Thunder ADC Configuration
+thunder:
+  # Thunder ADC management IP address or hostname
+  host: "192.168.10.10"
+  # Thunder ADC management port
+  port: 443
+  # Thunder ADC admin username
+  username: "admin"
+  # Thunder ADC admin password
+  password: "a10"
+  # Protocol for Thunder ADC communication
+  protocol: "https"
+  # The name of the partition to use on the A10 Thunder device
+  partition: "shared"
+
+# A10 TKC Specific Configuration
+tkc:
+  # Log level for the connector (INFO, DEBUG, WARNING, ERROR)
+  logLevel: "INFO"
+  # Whitelist of namespaces for the connector to watch
+  # Empty list means all namespaces
+  watchNamespaces: []
+  # TKC deployment namespace
+  namespace: "default"
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+# Node selector for pod placement
+nodeSelector: {}
+
+# Tolerations for pod scheduling
+tolerations: []
+
+# Affinity rules for pod scheduling
+affinity: {}
+
+

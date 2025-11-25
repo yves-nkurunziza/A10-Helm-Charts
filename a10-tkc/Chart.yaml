@@ -1,0 +1,18 @@
+apiVersion: v2
+name: a10-tkc
+description: A Helm chart for deploying A10 Thunder Kubernetes Connector (TKC)
+type: application
+version: 1.0.0
+appVersion: "1.11.0.0"
+icon: https://www.a10networks.com/wp-content/uploads/A10-Networks-logo.svg
+keywords:
+  - a10
+  - thunder
+  - load-balancer
+  - tkc
+  - kubernetes-connector
+maintainers:
+  - name: A10 Networks
+home: https://www.a10networks.com/
+sources:
+  - https://github.com/a10networks/thunder-kubernetes-connector

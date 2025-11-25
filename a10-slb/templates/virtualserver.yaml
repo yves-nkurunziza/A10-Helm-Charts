@@ -1,0 +1,12 @@
+{{- if .Values.virtualServer.enabled -}}
+---
+apiVersion: tkc.a10networks.com/v1
+kind: VirtualServer
+metadata:
+  name: {{ .Values.virtualServer.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-slb.labels" . | nindent 4 }}
+spec:
+  ip-address: {{ .Values.virtualServer.ipAddress | quote }}
+{{- end }}

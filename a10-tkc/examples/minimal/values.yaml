@@ -1,0 +1,11 @@
+thunder:
+  host: "192.168.10.10"
+  port: 443
+  username: "admin"
+  password: "a10"
+  protocol: "https"
+  partition: "shared"
+
+tkc:
+  logLevel: "INFO"
+  watchNamespaces: []

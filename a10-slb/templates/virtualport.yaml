@@ -1,0 +1,16 @@
+{{- if .Values.virtualPort.enabled -}}
+---
+apiVersion: tkc.a10networks.com/v1
+kind: VirtualPort
+metadata:
+  name: {{ .Values.virtualPort.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-slb.labels" . | nindent 4 }}
+spec:
+  virtualServer: {{ .Values.virtualPort.virtualServerName | quote }}
+  port: {{ .Values.virtualPort.port }}
+  protocol: {{ .Values.virtualPort.protocol | quote }}
+  serviceGroup: {{ .Values.virtualPort.serviceGroup | quote }}
+  action: {{ .Values.virtualPort.enableDisableAction | quote }}
+{{- end }}

@@ -1,0 +1,51 @@
+replicaCount: 1
+
+image:
+  repository: a10networks/tkc
+  pullPolicy: IfNotPresent
+  tag: ""
+
+thunder:
+  host: "thunder.production.example.com"
+  port: 443
+  username: "admin"
+  password: "CHANGE-ME"
+  protocol: "https"
+  partition: "shared"
+
+tkc:
+  logLevel: "INFO"
+  watchNamespaces: []
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+
+preInstallValidation:
+  enabled: true
+
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - a10-tkc
+        topologyKey: kubernetes.io/hostname

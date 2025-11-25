@@ -1,0 +1,20 @@
+{{- if .Values.healthMonitor.enabled -}}
+---
+apiVersion: tkc.a10networks.com/v1
+kind: HealthMonitor
+metadata:
+  name: {{ .Values.healthMonitor.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-slb.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.healthMonitor.type | quote }}
+  interval: {{ .Values.healthMonitor.interval }}
+  timeout: {{ .Values.healthMonitor.timeout }}
+  retry: {{ .Values.healthMonitor.retry }}
+  {{- if eq .Values.healthMonitor.type "http" }}
+  httpMethod: {{ .Values.healthMonitor.method | quote }}
+  httpUrl: {{ .Values.healthMonitor.url | quote }}
+  httpCode: {{ .Values.healthMonitor.statusCode | int }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,40 @@
+# SLB Configuration values
+
+# Health Monitor Configuration
+healthMonitor:
+  enabled: true
+  name: "hm1"
+  type: "http"
+  interval: 5
+  timeout: 3
+  retry: 3
+  method: "GET"
+  url: "/"
+  statusCode: 200
+
+# Service Group Configuration
+serviceGroup:
+  enabled: true
+  name: "sg1"
+  protocol: "tcp"
+  lbMethod: "round-robin"
+  serviceRef:
+    name: "web01"
+    namespace: "default"
+  healthMonitor: "hm1"
+
+# Virtual Server Configuration
+virtualServer:
+  enabled: true
+  name: "vs1"
+  ipAddress: "192.168.10.100"
+
+# Virtual Port Configuration
+virtualPort:
+  enabled: true
+  name: "vport1"
+  port: 80
+  protocol: "http"
+  serviceGroup: "sg1"
+  enableDisableAction: "enable"
+  virtualServerName: "vs1"

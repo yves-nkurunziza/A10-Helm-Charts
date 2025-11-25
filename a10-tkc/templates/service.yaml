@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "a10-tkc.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-tkc.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: metrics
+  selector:
+    {{- include "a10-tkc.selectorLabels" . | nindent 4 }}
