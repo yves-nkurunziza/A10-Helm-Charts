@@ -22,4 +22,5 @@ override-values.yaml
 .deploy/
 
 #Debugging
-# results.txt
+futureplan.md
+future.ios
