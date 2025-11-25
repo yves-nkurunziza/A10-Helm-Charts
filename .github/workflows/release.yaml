@@ -4,12 +4,11 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'a10-tkc/**'
-      - 'a10-slb/**'
 
 jobs:
   release:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,7 +28,5 @@ jobs:
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
-        with:
-          charts_dir: .
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
