@@ -107,5 +107,5 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ include "a10-tkc.serviceAccountName" . }}
-  namespace: {{ .Values.tkc.namespace }}
+  namespace: {{ .Release.Namespace }}
 {{- end }}
