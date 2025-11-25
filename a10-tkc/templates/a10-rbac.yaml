@@ -24,10 +24,10 @@ rules:
   - ""
   resources:
   - secrets
-  resourceNames:
-  - {{ include "a10-tkc.fullname" . }}-secret
   verbs:
   - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:
