@@ -55,6 +55,10 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: THUNDER_HOST
           value: {{ .Values.thunder.host | quote }}
         - name: THUNDER_PORT
@@ -95,12 +99,18 @@ spec:
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5
+        volumeMounts:
+        - name: log-volume
+          mountPath: /var/log/a10
         lifecycle:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "sleep 15"]
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: log-volume
+        emptyDir: {}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
