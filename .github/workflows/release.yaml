@@ -5,35 +5,52 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-  packages: write
-
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install Helm
         uses: azure/setup-helm@v3
-        with:
-          version: v3.13.0
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        with:
-          charts_dir: .
-          skip_existing: true
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_SKIP_EXISTING: true
+      - name: Package and Deploy
+        run: |
+          # Package charts
+          helm package a10-tkc
+          helm package a10-slb
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Switch to gh-pages
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+          
+          # Clean everything
+          git rm -rf . 2>/dev/null || true
+          rm -rf *
+          
+          # Get charts from main
+          git checkout main -- a10-tkc a10-slb
+          
+          # Package again in clean branch
+          helm package a10-tkc
+          helm package a10-slb
+          
+          # Organize in charts directory
+          mkdir -p charts
+          mv *.tgz charts/
+          
+          # Generate index
+          helm repo index charts --url https://yves-nkurunziza.github.io/A10-Helm-Charts/charts
+          cp charts/index.yaml index.yaml
+          
+          # Commit and push
+          git add charts/ index.yaml
+          git commit -m "Release: a10-tkc and a10-slb - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push -f origin gh-pages
