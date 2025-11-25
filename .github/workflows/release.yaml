@@ -5,14 +5,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,37 +19,18 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
           version: v3.13.0
 
-      - name: Lint Charts
-        run: |
-          helm lint a10-tkc
-          helm lint a10-slb
-
-      - name: Package Charts
-        run: |
-          mkdir -p .deploy/charts
-          helm package a10-tkc -d .deploy/charts
-          helm package a10-slb -d .deploy/charts
-
-      - name: Generate Index
-        run: |
-          helm repo index .deploy/charts --url https://yves-nkurunziza.github.io/A10-Helm-Charts/charts
-
-      - name: Deploy to GitHub Pages
-        run: |
-          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
-          git rm -rf . 2>/dev/null || true
-          
-          cp -r .deploy/charts .
-          cp .deploy/charts/index.yaml .
-          
-          git add -A
-          git commit -m "Release charts - $(date '+%Y-%m-%d %H:%M:%S')"
-          git push origin gh-pages --force
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          charts_dir: .
+          skip_existing: true
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

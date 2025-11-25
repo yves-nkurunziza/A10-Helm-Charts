@@ -26,7 +26,7 @@ serviceGroup:
 # Virtual Server Configuration
 virtualServer:
   enabled: true
-  name: "DR_DNS_SLB"
+  name: "dr-dns-slb"
   ipAddress: "172.28.3.20"
 
 # Virtual Port Configuration
@@ -37,4 +37,4 @@ virtualPort:
   protocol: "http"
   serviceGroup: "sg-web"
   enableDisableAction: "enable"
-  virtualServerName: "DR_DNS_SLB"
+  virtualServerName: "dr-dns-slb"
