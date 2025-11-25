@@ -14,29 +14,6 @@ spec:
   policyTypes:
   - Egress
   egress:
-  # Allow Kubernetes API access
-  - to:
-    - namespaceSelector: {}
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 6443
-  # Allow DNS resolution (assumes kube-dns in kube-system)
-  # For CoreDNS or custom DNS, update the label selector
-  - to:
-    - podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    ports:
-    - protocol: UDP
-      port: 53
-  {{- if .Values.thunder.host }}
-  - to:
-    - ipBlock:
-        cidr: {{ .Values.thunder.host }}/32
-    ports:
-    - protocol: TCP
-      port: {{ .Values.thunder.port }}
-  {{- end }}
+  # Allow all egress - TKC needs to access Kubernetes API and Thunder ADC
+  - {}
 {{- end }}
