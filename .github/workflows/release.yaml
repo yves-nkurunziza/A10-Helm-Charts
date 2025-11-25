@@ -7,9 +7,9 @@ on:
 
 jobs:
   release:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -26,7 +26,40 @@ jobs:
         with:
           version: v3.12.0
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.5.0
+      - name: Package Helm Charts
+        run: |
+          mkdir -p .cr-release-packages
+          helm package a10-tkc -d .cr-release-packages
+          helm package a10-slb -d .cr-release-packages
+
+      - name: Create GitHub Releases
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg in .cr-release-packages/*.tgz; do
+            chart=$(basename $pkg .tgz)
+            gh release create $chart $pkg --generate-notes || echo "Release exists"
+          done
+
+      - name: Update Helm Index
+        run: |
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+          git rm -rf . || true
+          git clean -fdx
+          
+          # Download all release assets
+          mkdir -p charts
+          gh release list | awk '{print $1}' | while read tag; do
+            gh release download $tag -D charts || true
+          done
+          
+          # Generate index
+          helm repo index charts --url https://yves-nkurunziza.github.io/A10-Helm-Charts/charts
+          mv charts/index.yaml .
+          
+          # Commit and push
+          git add charts/ index.yaml
+          git commit -m "Update Helm repository" || true
+          git push origin gh-pages --force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

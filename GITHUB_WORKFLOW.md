@@ -1,97 +1,89 @@
-# GitHub Workflow
+# GitHub Deployment - Quick Start
 
-## Setup Steps
+## Your Public Repository
+```
+https://github.com/yves-nkurunziza/A10-Helm-Charts.git
+Helm Repo: https://yves-nkurunziza.github.io/A10-Helm-Charts
+```
 
-### 1. Create GitHub Repository
+## Push to GitHub
+
+On your server (`/home/yves/A10`):
 
 ```bash
 cd /home/yves/A10
 
-# Initialize git
 git init
 git add .
-git commit -m "Initial commit: A10 TKC Helm charts"
-
-# Create repo on GitHub, then:
-git remote add origin https://github.com/yvesnkurunziza/a10-charts.git
+git commit -m "Production-ready A10 TKC Helm charts"
+git remote add origin https://github.com/yves-nkurunziza/A10-Helm-Charts.git
 git branch -M main
 git push -u origin main
 ```
 
-### 2. Enable GitHub Pages
+## Enable GitHub Pages
 
-1. Go to repository **Settings** → **Pages**
+1. Go to: https://github.com/yves-nkurunziza/A10-Helm-Charts/settings/pages
 2. Source: **gh-pages** branch
-3. Save
+3. Click Save
 
-The workflow will automatically create this branch and publish charts.
+GitHub Actions will automatically create the `gh-pages` branch on first push.
 
-### 3. First Release
+## Using Your Helm Repository
 
-After pushing to main, GitHub Actions will:
-1. Package both charts
-2. Create `gh-pages` branch
-3. Publish `index.yaml` to GitHub Pages
-4. Your chart repo will be live at: `https://yvesnkurunziza.github.io/a10-charts`
+### Add the Repository
 
-### 4. Install Charts from Repo
-
-**Platform Team:**
 ```bash
-# Add Helm repository
-helm repo add a10 https://yvesnkurunziza.github.io/a10-charts
+helm repo add a10 https://yves-nkurunziza.github.io/A10-Helm-Charts
 helm repo update
-
-# Install TKC operator
-helm install tkc a10/a10-tkc -n kube-system
-
-# Check what was installed
-helm list -n kube-system
 ```
 
-**DevOps Teams:**
+### Install TKC Operator (Platform Team)
+
 ```bash
-# Install application config
-helm install web-app a10/a10-slb -n production \
-  --set virtualServer.ipAddress=172.28.3.20
+helm install tkc a10/a10-tkc -n kube-system
+```
+
+### Install DNS Load Balancer (DevOps Team)
+
+```bash
+helm install dns a10/a10-slb -n production
+```
+
+### Verify Installation
+
+```bash
+# Check TKC operator
+kubectl get pods -n kube-system -l app.kubernetes.io/name=a10-tkc
+
+# Check DNS load balancer resources
+kubectl get virtualservers,servicegroups,healthmonitors,virtualports -n production
 ```
 
 ## Updating Charts
 
-### Bump Version
-
-Edit `Chart.yaml`:
-```yaml
-version: 1.0.1  # Increment this
-```
-
-### Push Changes
-
 ```bash
+# Make changes to charts
+cd /home/yves/A10
+
+# Bump version in Chart.yaml
+# a10-tkc/Chart.yaml: version: 1.0.1
+# a10-slb/Chart.yaml: version: 1.0.1
+
+# Commit and push
 git add .
-git commit -m "Bump chart version to 1.0.1"
+git commit -m "Update charts to v1.0.1"
 git push
+
+# Users update with:
+helm repo update
+helm upgrade tkc a10/a10-tkc -n kube-system
 ```
 
-GitHub Actions automatically:
-- Packages new version
-- Updates Helm repo index
-- Makes it available via `helm repo update`
+## Check GitHub Actions
 
-## Local Development Testing
+After pushing, monitor the release workflow:
+https://github.com/yves-nkurunziza/A10-Helm-Charts/actions
 
-```bash
-# On your server at /home/yves/A10
-helm install tkc ./a10-tkc -n kube-system --dry-run --debug
-
-# Actually install from local
-helm install tkc ./a10-tkc -n kube-system
-```
-
-## Workflow Benefits
-
-✅ **Version Control**: All changes tracked in Git  
-✅ **Automated Releases**: Push = new chart version  
-✅ **Team Distribution**: Everyone uses `helm repo add`  
-✅ **Rollback**: `helm rollback` works with versioned charts  
-✅ **Professional**: Standard Helm chart distribution method
+Once complete, your charts are available at:
+https://yves-nkurunziza.github.io/A10-Helm-Charts/index.yaml

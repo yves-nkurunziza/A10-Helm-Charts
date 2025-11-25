@@ -13,7 +13,7 @@ Production-ready Helm charts for deploying A10 Thunder Kubernetes Connector (TKC
 
 ```bash
 # Install TKC operator (once per cluster)
-helm repo add a10 https://yvesnkurunziza.github.io/a10-charts
+helm repo add a10 https://yves-nkurunziza.github.io/A10-Helm-Charts
 helm install tkc a10/a10-tkc -n kube-system
 ```
 
@@ -46,7 +46,7 @@ helm install web-app a10/a10-slb -n production \
 
 ```bash
 # Clone repository
-git clone https://github.com/yvesnkurunziza/a10-charts.git
+git clone https://github.com/yves-nkurunziza/A10-Helm-Charts.git
 cd a10-charts
 
 # Test charts locally
