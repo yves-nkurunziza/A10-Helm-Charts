@@ -53,7 +53,7 @@ helm list -n kube-system
 ```bash
 # Install application config
 helm install web-app a10/a10-slb -n production \
-  --set virtualServer.ipAddress=10.98.252.100
+  --set virtualServer.ipAddress=172.28.3.20
 ```
 
 ## Updating Charts

@@ -51,7 +51,7 @@ serviceMonitor:
 # A10 Thunder ADC Configuration
 # Management interface connection details
 thunder:
-  host: "192.168.122.211"
+  host: "10.98.252.41"
   port: 443
   username: "admin"
   password: "Clezionh25!1"

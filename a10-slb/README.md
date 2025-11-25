@@ -18,65 +18,56 @@ This chart creates CRD instances for per-application load balancer configuration
 
 ## Installation
 
+### Simple: Use Values File
+
 ```bash
-helm install web-app ../a10-slb \
-  --set virtualServer.ipAddress=192.168.10.100 \
-  --set serviceGroup.serviceRef.name=web-app-svc \
-  --set serviceGroup.serviceRef.namespace=default
+# Use default values
+helm install web-app ../a10-slb -n production
+
+# Or use custom values file
+helm install web-app ../a10-slb -n production -f my-app.yaml
+```
+
+### Using Example Configurations
+
+```bash
+# Web application (HTTP on port 80)
+helm install web-app ../a10-slb -n production \
+  -f examples/web-app.yaml
+
+# API application (HTTPS on port 443)
+helm install api-app ../a10-slb -n production \
+  -f examples/api-app.yaml
+```
+
+### Command Line Overrides (if needed)
+
+```bash
+helm install web-app ../a10-slb -n production \
+  --set virtualServer.ipAddress=172.28.3.22 \
+  --set serviceGroup.serviceRef.name=my-service
 ```
 
 ## Configuration
 
-### Health Monitor
+See [examples/](examples/) directory for ready-to-use configurations.
 
-```yaml
-healthMonitor:
-  enabled: true
-  name: "hm-http"
-  type: "http"
-  interval: 5
-  timeout: 3
-  retry: 3
-  method: "GET"
-  url: "/"
-  statusCode: 200
-```
-
-### Service Group
-
-```yaml
-serviceGroup:
-  enabled: true
-  name: "sg-web"
-  protocol: "tcp"
-  lbMethod: "round-robin"
-  serviceRef:
-    name: "web-app-svc"
-    namespace: "default"
-  healthMonitor: "hm-http"
-```
-
-### Virtual Server
+### Basic Structure
 
 ```yaml
 virtualServer:
-  enabled: true
-  name: "vs-web"
-  ipAddress: "192.168.10.100"
+  ipAddress: "172.28.3.20"  # Your VIP
+
+serviceGroup:
+  serviceRef:
+    name: "your-k8s-service"
+    namespace: "your-namespace"
 ```
 
-### Virtual Port
+## Examples
 
-```yaml
-virtualPort:
-  enabled: true
-  name: "vport-80"
-  port: 80
-  protocol: "http"
-  serviceGroup: "sg-web"
-  virtualServerName: "vs-web"
-  enableDisableAction: "enable"
-```
+- [examples/web-app.yaml](examples/web-app.yaml) - HTTP web application
+- [examples/api-app.yaml](examples/api-app.yaml) - HTTPS API service
 
 ## Team Workflow
 
@@ -89,14 +80,19 @@ helm install tkc . -n kube-system
 **DevOps teams deploy per application:**
 ```bash
 cd /Users/yvesnkurunziza/A10/a10-slb
-helm install my-app . -n my-namespace \
-  -f my-app-values.yaml
+
+# Copy and customize example
+cp examples/web-app.yaml my-app.yaml
+# Edit my-app.yaml with your settings
+
+# Deploy
+helm install my-app . -n production -f my-app.yaml
 ```
 
 ## Upgrading
 
 ```bash
-helm upgrade web-app ../a10-slb --reuse-values
+helm upgrade web-app ../a10-slb -f my-app.yaml
 ```
 
 ## Uninstalling

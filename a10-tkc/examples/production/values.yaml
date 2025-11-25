@@ -10,7 +10,7 @@ image:
   tag: ""
 
 thunder:
-  host: "192.168.122.211"  # A10 Thunder ADC management interface
+  host: "10.98.252.41"  # A10 Thunder ADC management interface
   port: 443
   username: "admin"
   password: "Clezionh25!1"

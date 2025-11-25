@@ -22,7 +22,7 @@ helm install tkc a10/a10-tkc -n kube-system
 ```bash
 # Deploy application load balancer
 helm install web-app a10/a10-slb -n production \
-  --set virtualServer.ipAddress=10.98.252.100 \
+  --set virtualServer.ipAddress=172.28.3.20 \
   --set serviceGroup.serviceRef.name=web-service
 ```
 

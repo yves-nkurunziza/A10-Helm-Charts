@@ -7,7 +7,7 @@ Management Network: 192.168.122.0/24
 ├── server01 (k8s control plane): 192.168.122.47
 ├── server02 (k8s worker):        192.168.122.167
 ├── server03 (k8s worker):        192.168.122.192
-└── A10 Thunder ADC:              192.168.122.211
+└── A10 Thunder ADC:              10.98.252.41
 
 Data Plane Network: 10.98.252.0/25
 ├── server01 (k8s control plane): 10.98.252.31
@@ -18,7 +18,7 @@ Data Plane Network: 10.98.252.0/25
 ## Prerequisites
 
 1. **Thunder ADC Access**
-   - Management interface accessible at `192.168.122.211:443`
+   - Management interface accessible at `10.98.252.41:443`
    - Admin credentials available
    - Partition created (default: `shared`)
 
@@ -28,7 +28,7 @@ Data Plane Network: 10.98.252.0/25
    - `kubectl` configured
 
 3. **Network Connectivity**
-   - Kubernetes nodes can reach `192.168.122.211:443` (Thunder management)
+   - Kubernetes nodes can reach `10.98.252.41:443` (Thunder management)
    - Thunder ADC can reach nodes on data plane network `10.98.252.0/25`
 
 ## Step 1: Install TKC Operator (Platform Team)
@@ -44,7 +44,7 @@ helm install tkc . -n kube-system \
 
 # Option B: Command line override
 helm install tkc . -n kube-system \
-  --set thunder.host=192.168.122.211 \
+  --set thunder.host=10.98.252.41 \
   --set thunder.password='YOUR-ACTUAL-PASSWORD'
 ```
 
@@ -72,7 +72,7 @@ cd /Users/yvesnkurunziza/A10/a10-slb
 # Deploy for your application
 helm install web-app . -n production \
   --set virtualServer.name=vs-web \
-  --set virtualServer.ipAddress=10.98.252.100 \
+  --set virtualServer.ipAddress=172.28.3.20 \
   --set serviceGroup.name=sg-web \
   --set serviceGroup.serviceRef.name=web-service \
   --set serviceGroup.serviceRef.namespace=production
@@ -87,7 +87,7 @@ Available range: 10.98.252.64 - 10.98.252.126
 (10.98.252.0/25 minus used IPs)
 
 Example assignments:
-- Web app:    10.98.252.100
+- Web app:    172.28.3.20
 - API app:    10.98.252.101
 - Mobile app: 10.98.252.102
 ```
@@ -103,7 +103,7 @@ kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc \
   | grep "Reconciling"
 
 # Test from external client
-curl http://10.98.252.100
+curl http://172.28.3.20
 ```
 
 ## Troubleshooting
@@ -113,7 +113,7 @@ curl http://10.98.252.100
 ```bash
 # Test connectivity from TKC pod
 kubectl exec -n kube-system deploy/tkc-a10-tkc -- \
-  curl -k https://192.168.122.211:443
+  curl -k https://10.98.252.41:443
 
 # Check NetworkPolicy
 kubectl get networkpolicy -n kube-system
@@ -141,7 +141,7 @@ cd /Users/yvesnkurunziza/A10/a10-tkc/examples/troubleshooting
 ## Network Policy Notes
 
 The default NetworkPolicy allows TKC egress to:
-- `192.168.122.211/32` (Thunder ADC management)
+- `10.98.252.41/32` (Thunder ADC management)
 - Kubernetes API (443, 6443)
 - DNS (kube-dns)
 

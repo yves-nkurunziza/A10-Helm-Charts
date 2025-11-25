@@ -1,7 +1,7 @@
 # Minimal Example - Real Infrastructure
 
 thunder:
-  host: "192.168.122.211"  # A10 Thunder ADC management IP
+  host: "10.98.252.41"  # A10 Thunder ADC management IP
   port: 443
   username: "admin"
   password: "Clezionh25!1"

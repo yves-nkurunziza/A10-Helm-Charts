@@ -1,18 +1,15 @@
-# SLB Configuration values
+# Web Application Load Balancer
+# VIP: 172.28.3.20
+# Backend: web-service in production namespace
 
-# Health Monitor Configuration
 healthMonitor:
   enabled: true
-  name: "hm-http"
+  name: "hm-web"
   type: "http"
-  interval: 5
-  timeout: 3
-  retry: 3
   method: "GET"
   url: "/"
   statusCode: 200
 
-# Service Group Configuration
 serviceGroup:
   enabled: true
   name: "sg-web"
@@ -21,20 +18,17 @@ serviceGroup:
   serviceRef:
     name: "web-service"
     namespace: "production"
-  healthMonitor: "hm-http"
+  healthMonitor: "hm-web"
 
-# Virtual Server Configuration
 virtualServer:
   enabled: true
-  name: "DR_DNS_SLB"
+  name: "vs-web"
   ipAddress: "172.28.3.20"
 
-# Virtual Port Configuration
 virtualPort:
   enabled: true
   name: "vport-80"
   port: 80
   protocol: "http"
   serviceGroup: "sg-web"
-  enableDisableAction: "enable"
-  virtualServerName: "DR_DNS_SLB"
+  virtualServerName: "vs-web"
