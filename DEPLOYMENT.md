@@ -1,4 +1,4 @@
-# Deployment Guide - Real Infrastructure
+# Deployment Guide
 
 ## Network Topology
 
@@ -6,154 +6,288 @@
 Management Network: 192.168.122.0/24
 ├── server01 (k8s control plane): 192.168.122.47
 ├── server02 (k8s worker):        192.168.122.167
-├── server03 (k8s worker):        192.168.122.192
-└── A10 Thunder ADC:              10.98.252.41
+├── server03 (k8s worker):        192.168.122.33
+└── A10 Thunder ADC (Mgmt):       192.168.122.211
 
 Data Plane Network: 10.98.252.0/25
 ├── server01 (k8s control plane): 10.98.252.31
 ├── server02 (k8s worker):        10.98.252.32
-└── server03 (k8s worker):        10.98.252.41
+├── server03 (k8s worker):        10.98.252.33
+└── A10 Thunder ADC (Data):       10.98.252.41
 ```
 
 ## Prerequisites
 
-1. **Thunder ADC Access**
-   - Management interface accessible at `10.98.252.41:443`
-   - Admin credentials available
-   - Partition created (default: `shared`)
+### 1. Thunder ADC Requirements
+- **Management Access**: `https://192.168.122.211` or `https://10.98.252.41`
+- **Admin Credentials**: Username and password with partition access
+- **Partition**: `shared` (default) or custom partition created
+- **aXAPI Enabled**: REST API accessible on port 443
 
-2. **Kubernetes Cluster**
-   - 3-node cluster with control plane on server01
-   - Helm 3.x installed
-   - `kubectl` configured
+### 2. Kubernetes Cluster
+- **Version**: 1.24+ recommended
+- **Helm**: Version 3.8+
+- **kubectl**: Configured with cluster admin access
+- **Nodes**: At least 3 nodes for high availability
 
-3. **Network Connectivity**
-   - Kubernetes nodes can reach `10.98.252.41:443` (Thunder management)
-   - Thunder ADC can reach nodes on data plane network `10.98.252.0/25`
+### 3. Network Connectivity
+- ✅ Kubernetes nodes → Thunder ADC management IP (`10.98.252.41:443`)
+- ✅ Thunder ADC → Kubernetes nodes on data plane (`10.98.252.0/25`)
+- ✅ DNS resolution between all components
 
-## Step 1: Install TKC Operator (Platform Team)
+## Installation
+
+### Step 1: Add Helm Repository
 
 ```bash
-# From your workstation
-cd /Users/yvesnkurunziza/A10/a10-tkc
-
-# Option A: Using production values file
-helm install tkc . -n kube-system \
-  -f examples/production/values.yaml \
-  --set thunder.password='YOUR-ACTUAL-PASSWORD'
-
-# Option B: Command line override
-helm install tkc . -n kube-system \
-  --set thunder.host=10.98.252.41 \
-  --set thunder.password='YOUR-ACTUAL-PASSWORD'
+helm repo add a10 https://yves-nkurunziza.github.io/A10-Helm-Charts
+helm repo update
 ```
 
-### Verify TKC Installation
+### Step 2: Install TKC Operator
+
+The TKC operator runs in `kube-system` namespace and connects to Thunder ADC to configure load balancers based on Kubernetes CRDs.
+
+```bash
+# Install with inline values
+helm install tkc a10/a10-tkc -n kube-system \
+  --set thunder.host=10.98.252.41 \
+  --set thunder.username=admin \
+  --set thunder.password='Clezionh25!1' \
+  --set thunder.partition=shared
+
+# Or use a values file
+cat > tkc-values.yaml <<EOF
+thunder:
+  host: 10.98.252.41
+  port: 443
+  protocol: https
+  username: admin
+  password: Clezionh25!1
+  partition: shared
+
+image:
+  repository: a10networks/a10-kubernetes-connector
+  tag: latest
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+networkPolicy:
+  enabled: true
+EOF
+
+helm install tkc a10/a10-tkc -n kube-system -f tkc-values.yaml
+```
+
+### Step 3: Verify TKC Installation
 
 ```bash
 # Check pod status
 kubectl get pods -n kube-system -l app.kubernetes.io/name=a10-tkc
 
-# Check logs
-kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc --tail=50
+# Expected output:
+# NAME                           READY   STATUS    RESTARTS   AGE
+# tkc-a10-tkc-xxxxx-xxxxx        1/1     Running   0          2m
 
-# Verify CRDs installed
+# Check TKC logs for successful Thunder connection
+kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc --tail=100 | grep "Detect device"
+
+# Expected: "Detect device https://10.98.252.41/axapi/v3: ... is up"
+
+# Verify CRDs are installed
 kubectl api-resources | grep tkc.a10networks.com
 
-# Run Helm test
-helm test tkc -n kube-system
+# Expected output:
+# healthmonitors      tkc.a10networks.com       true    HealthMonitor
+# servicegroups       tkc.a10networks.com       true    ServiceGroup
+# virtualservers      tkc.a10networks.com       true    VirtualServer
+# virtualports        tkc.a10networks.com       true    VirtualPort
 ```
 
-## Step 2: Deploy Application Load Balancer (DevOps Team)
+### Step 4: Deploy Your Application
+
+First, ensure your application is running in Kubernetes:
 
 ```bash
-cd /Users/yvesnkurunziza/A10/a10-slb
+# Example: Deploy a test nginx application
+kubectl create namespace production
+kubectl create deployment web-service --image=nginx -n production
+kubectl expose deployment web-service --port=80 -n production
 
-# Deploy for your application
-helm install web-app . -n production \
-  --set virtualServer.name=vs-web \
+# Verify service exists
+kubectl get svc web-service -n production
+```
+
+### Step 5: Deploy Load Balancer Configuration
+
+```bash
+# Deploy load balancer for your application
+helm install my-app a10/a10-slb -n production \
+  --set virtualServer.name=my-vs \
   --set virtualServer.ipAddress=172.28.3.20 \
-  --set serviceGroup.name=sg-web \
+  --set serviceGroup.name=my-sg \
   --set serviceGroup.serviceRef.name=web-service \
-  --set serviceGroup.serviceRef.namespace=production
+  --set healthMonitor.name=my-hm \
+  --set healthMonitor.type=http \
+  --set virtualPort.name=my-vport \
+  --set virtualPort.port=80 \
+  --set virtualPort.protocol=http
 ```
 
-### Virtual IP Assignment
+> **Important**: The `serviceGroup.serviceRef.name` should be **just the service name**, not `namespace/name`. TKC automatically adds the namespace prefix.
 
-Allocate VIPs from data plane network for Thunder ADC:
-
-```
-Available range: 10.98.252.64 - 10.98.252.126
-(10.98.252.0/25 minus used IPs)
-
-Example assignments:
-- Web app:    172.28.3.20
-- API app:    10.98.252.101
-- Mobile app: 10.98.252.102
-```
-
-### Verify Application Config
+### Step 6: Verify Load Balancer
 
 ```bash
-# Check CRD instances
-kubectl get healthmonitors,servicegroups,virtualservers,virtualports -n production
+# Check CRD resources
+kubectl get virtualservers,servicegroups,healthmonitors,virtualports -n production
 
-# Check TKC reconciliation
-kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc \
-  | grep "Reconciling"
+# Expected output showing Active status:
+# NAME                               NAME    VIP            STATUS
+# virtualserver.../my-vs             my-vs   172.28.3.20    
+#
+# NAME                               NAME    STATUS   SERVICE       PROTOCOL
+# servicegroup.../my-sg              my-sg   Active   web-service   tcp
+#
+# NAME                               NAME    STATUS   TYPE    URL
+# healthmonitor.../my-hm             my-hm   Active   http    /
+#
+# NAME                               PORT    PROTOCOL STATUS      VIRTUALSERVER
+# virtualport.../my-vport            80      http     NoIngress   my-vs
 
-# Test from external client
+# Check Thunder ADC configuration (via web UI or API)
+# Login to https://10.98.252.41
+# Navigate to: SLB → Virtual Servers
+# Verify "my-vs" appears with VIP 172.28.3.20
+
+# Test the VIP
 curl http://172.28.3.20
+# Should return nginx welcome page
 ```
+
+## VIP Address Planning
+
+Allocate Virtual IP addresses from your data plane network or designated VIP pool:
+
+```yaml
+Example Allocations:
+  DNS Services:       172.28.3.20
+  Web Applications:   172.28.3.50-59
+  API Gateways:       172.28.3.100-109
+  Internal Services:  172.28.3.200-209
+```
+
+> **Note**: Update the `virtualServer.ipAddress` parameter for each application with your allocated VIP.
 
 ## Troubleshooting
 
-### TKC Can't Reach Thunder ADC
+### Issue: TKC Can't Connect to Thunder ADC
 
 ```bash
 # Test connectivity from TKC pod
-kubectl exec -n kube-system deploy/tkc-a10-tkc -- \
-  curl -k https://10.98.252.41:443
+TKC_POD=$(kubectl get pod -n kube-system -l app.kubernetes.io/name=a10-tkc -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n kube-system $TKC_POD -- curl -k https://10.98.252.41/axapi/v3
 
-# Check NetworkPolicy
+# Check NetworkPolicy isn't blocking
 kubectl get networkpolicy -n kube-system
+
+# Verify Thunder credentials secret
+kubectl get secret tkc-a10-tkc-secret -n kube-system -o yaml
 ```
 
-### Thunder ADC Can't Reach Backend Pods
+### Issue: Service Group Shows "NoSvc" Status
 
 ```bash
-# Verify service endpoints
-kubectl get endpoints -n production
+# Verify backend service exists
+kubectl get svc -n production
 
-# Check node IPs
-kubectl get nodes -o wide
+# Check service name matches CRD
+kubectl describe servicegroup my-sg -n production
 
-# Ensure Thunder ADC routes to 10.98.252.0/25
+# Common fix: Ensure serviceRef.name is ONLY the service name (no namespace prefix)
 ```
 
-### Debug Script
+### Issue: Virtual Server Down on Thunder ADC
 
 ```bash
-cd /Users/yvesnkurunziza/A10/a10-tkc/examples/troubleshooting
-./debug.sh kube-system tkc
+# Check ServiceGroup has backend members
+kubectl describe servicegroup my-sg -n production
+
+# Verify pods are running
+kubectl get pods -n production -l app=web-service
+
+# Check health monitor status
+kubectl describe healthmonitor my-hm -n production
 ```
 
-## Network Policy Notes
+### Debug Commands
 
-The default NetworkPolicy allows TKC egress to:
-- `10.98.252.41/32` (Thunder ADC management)
-- Kubernetes API (443, 6443)
-- DNS (kube-dns)
+```bash
+# View all TKC logs
+kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc --tail=500
 
-If Thunder management IP changes, update NetworkPolicy in values:
-```yaml
-networkPolicy:
-  enabled: true
+# Watch TKC processing resources
+kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc -f | grep -i "virtualserver\|servicegroup"
+
+# Check RBAC permissions
+kubectl auth can-i list servicegroups.tkc.a10networks.com --as=system:serviceaccount:kube-system:tkc-a10-tkc
+```
+
+## Upgrade
+
+### Upgrade TKC Operator
+
+```bash
+# Update Helm repo
+helm repo update
+
+# Check available versions
+helm search repo a10/a10-tkc --versions
+
+# Upgrade to latest
+helm upgrade tkc a10/a10-tkc -n kube-system
+```
+
+### Upgrade Application Load Balancer
+
+```bash
+# Upgrade specific deployment
+helm upgrade my-app a10/a10-slb -n production -f my-values.yaml
+```
+
+## Uninstall
+
+```bash
+# Remove application load balancer
+helm uninstall my-app -n production
+
+# Remove TKC operator (will NOT delete Thunder ADC config)
+helm uninstall tkc -n kube-system
+
+# Clean up CRDs if needed
+kubectl delete crd virtualservers.tkc.a10networks.com
+kubectl delete crd servicegroups.tkc.a10networks.com
+kubectl delete crd healthmonitors.tkc.a10networks.com
+kubectl delete crd virtualports.tkc.a10networks.com
 ```
 
 ## Next Steps
 
-1. Configure additional applications using `a10-slb` chart
-2. Set up monitoring with ServiceMonitor (if using Prometheus)
-3. Configure backup/restore for Thunder ADC
-4. Implement GitOps for declarative config management
+1. **GitOps Integration**: Use ArgoCD or Flux for declarative config management
+2. **Monitoring**: Configure Prometheus ServiceMonitor for TKC metrics
+3. **High Availability**: Deploy multiple TKC replicas for redundancy
+4. **Disaster Recovery**: Set up GSLB for multi-site load balancing (see `futureplan.md`)
+
+## Support Resources
+
+- TKC Logs: `kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc`
+- CRD Status: `kubectl get virtualservers,servicegroups,healthmonitors -A`
+- Thunder ADC UI: `https://10.98.252.41`
+- A10 Documentation: https://documentation.a10networks.com/
