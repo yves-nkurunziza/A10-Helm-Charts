@@ -1,0 +1,40 @@
+# SLB Configuration values
+
+# Health Monitor Configuration
+healthMonitor:
+  enabled: true
+  name: "hm-http"
+  type: "http"
+  interval: 5
+  timeout: 3
+  retry: 3
+  method: "GET"
+  url: "/"
+  statusCode: 200
+
+# Service Group Configuration
+serviceGroup:
+  enabled: true
+  name: "sg-web"
+  protocol: "tcp"
+  lbMethod: "round-robin"
+  serviceRef:
+    name: "web-service"
+    namespace: "production"
+  healthMonitor: "hm-http"
+
+# Virtual Server Configuration
+virtualServer:
+  enabled: true
+  name: "dr-dns-slb"
+  ipAddress: "172.28.3.20"
+
+# Virtual Port Configuration
+virtualPort:
+  enabled: true
+  name: "vport-80"
+  port: 80
+  protocol: "http"
+  serviceGroup: "sg-web"
+  enableDisableAction: "enable"
+  virtualServerName: "dr-dns-slb"

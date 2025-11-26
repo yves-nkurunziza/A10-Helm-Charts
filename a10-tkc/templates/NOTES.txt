@@ -1,0 +1,28 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your A10 Thunder Kubernetes Connector has been deployed successfully.
+
+1. Get the TKC pod status:
+
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "a10-tkc.name" . }}
+
+2. View TKC logs:
+
+   kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "a10-tkc.name" . }} --tail=100 -f
+
+3. Verify CRDs are installed:
+
+   kubectl api-resources | grep tkc.a10networks.com
+
+4. Thunder ADC Configuration:
+   - Host: {{ .Values.thunder.host }}
+   - Port: {{ .Values.thunder.port }}
+   - Partition: {{ .Values.thunder.partition }}
+
+5. Deploy load balancer configurations using the a10-slb-config chart:
+
+   helm install my-app-slb ./a10-slb-config \
+     --set virtualServer.ipAddress=<YOUR_VIP>
+
+For more information, visit:
+https://github.com/a10networks/tkc

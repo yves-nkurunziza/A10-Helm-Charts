@@ -1,0 +1,46 @@
+name: Lint and Test
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.12.0
+
+    - name: Run helm lint
+      run: |
+        helm lint .
+        helm lint a10-slb-config/
+
+    - name: Run helm template
+      run: |
+        helm template test . > /tmp/manifests.yaml
+        helm template test-config a10-slb-config/ > /tmp/config-manifests.yaml
+
+    - name: Install kubeconform
+      run: |
+        wget https://github.com/yannh/kubeconform/releases/download/v0.6.3/kubeconform-linux-amd64.tar.gz
+        tar xzf kubeconform-linux-amd64.tar.gz
+        sudo mv kubeconform /usr/local/bin/
+
+    - name: Validate manifests
+      run: |
+        kubeconform -summary -output json /tmp/manifests.yaml
+        kubeconform -summary -output json /tmp/config-manifests.yaml
+
+    - name: Check for secrets in values
+      run: |
+        ! grep -i "password.*:" values.yaml | grep -v "CHANGE"
