@@ -7,19 +7,19 @@ Management Network: 192.168.122.0/24
 ├── server01 (k8s control plane): 192.168.122.47
 ├── server02 (k8s worker):        192.168.122.167
 ├── server03 (k8s worker):        192.168.122.33
-└── A10 Thunder ADC (Mgmt):       192.168.122.211
+└── A10 Thunder ADC (Mgmt):       192.168.122.200
 
 Data Plane Network: 10.98.252.0/25
 ├── server01 (k8s control plane): 10.98.252.31
 ├── server02 (k8s worker):        10.98.252.32
 ├── server03 (k8s worker):        10.98.252.33
-└── A10 Thunder ADC (Data):       10.98.252.41
+└── A10 Thunder ADC (Data):       10.98.252.40
 ```
 
 ## Prerequisites
 
 ### 1. Thunder ADC Requirements
-- **Management Access**: `https://192.168.122.211` or `https://10.98.252.41`
+- **Management Access**: `https://192.168.122.200` or `https://10.98.252.40`
 - **Admin Credentials**: Username and password with partition access
 - **Partition**: `shared` (default) or custom partition created
 - **aXAPI Enabled**: REST API accessible on port 443
@@ -31,7 +31,7 @@ Data Plane Network: 10.98.252.0/25
 - **Nodes**: At least 3 nodes for high availability
 
 ### 3. Network Connectivity
-- ✅ Kubernetes nodes → Thunder ADC management IP (`10.98.252.41:443`)
+- ✅ Kubernetes nodes → Thunder ADC management IP (`10.98.252.40:443`)
 - ✅ Thunder ADC → Kubernetes nodes on data plane (`10.98.252.0/25`)
 - ✅ DNS resolution between all components
 
@@ -51,7 +51,7 @@ The TKC operator runs in `kube-system` namespace and connects to Thunder ADC to 
 ```bash
 # Install with inline values
 helm install tkc a10/a10-tkc -n kube-system \
-  --set thunder.host=10.98.252.41 \
+  --set thunder.host=10.98.252.40 \
   --set thunder.username=admin \
   --set thunder.password='Clezionh25!1' \
   --set thunder.partition=shared
@@ -59,7 +59,7 @@ helm install tkc a10/a10-tkc -n kube-system \
 # Or use a values file
 cat > tkc-values.yaml <<EOF
 thunder:
-  host: 10.98.252.41
+  host: 10.98.252.40
   port: 443
   protocol: https
   username: admin
@@ -99,7 +99,7 @@ kubectl get pods -n kube-system -l app.kubernetes.io/name=a10-tkc
 # Check TKC logs for successful Thunder connection
 kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc --tail=100 | grep "Detect device"
 
-# Expected: "Detect device https://10.98.252.41/axapi/v3: ... is up"
+# Expected: "Detect device https://10.98.252.40/axapi/v3: ... is up"
 
 # Verify CRDs are installed
 kubectl api-resources | grep tkc.a10networks.com
@@ -163,7 +163,7 @@ kubectl get virtualservers,servicegroups,healthmonitors,virtualports -n producti
 # virtualport.../my-vport            80      http     NoIngress   my-vs
 
 # Check Thunder ADC configuration (via web UI or API)
-# Login to https://10.98.252.41
+# Login to https://10.98.252.40
 # Navigate to: SLB → Virtual Servers
 # Verify "my-vs" appears with VIP 172.28.3.20
 
@@ -193,7 +193,7 @@ Example Allocations:
 ```bash
 # Test connectivity from TKC pod
 TKC_POD=$(kubectl get pod -n kube-system -l app.kubernetes.io/name=a10-tkc -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -n kube-system $TKC_POD -- curl -k https://10.98.252.41/axapi/v3
+kubectl exec -n kube-system $TKC_POD -- curl -k https://10.98.252.40/axapi/v3
 
 # Check NetworkPolicy isn't blocking
 kubectl get networkpolicy -n kube-system
@@ -289,5 +289,5 @@ kubectl delete crd virtualports.tkc.a10networks.com
 
 - TKC Logs: `kubectl logs -n kube-system -l app.kubernetes.io/name=a10-tkc`
 - CRD Status: `kubectl get virtualservers,servicegroups,healthmonitors -A`
-- Thunder ADC UI: `https://10.98.252.41`
+- Thunder ADC UI: `https://10.98.252.40`
 - A10 Documentation: https://documentation.a10networks.com/

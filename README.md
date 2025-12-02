@@ -22,7 +22,7 @@ Deploy once per cluster to enable A10 Thunder ADC integration:
 
 ```bash
 helm install tkc a10/a10-tkc -n kube-system \
-  --set thunder.host=10.98.252.41 \
+  --set thunder.host=10.98.252.40 \
   --set thunder.password='YOUR-PASSWORD'
 ```
 
