@@ -1,0 +1,167 @@
+{{- if .Values.rbac.create -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "a10-tkc.fullname" . }}-clusterrole
+  labels:
+    {{- include "a10-tkc.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - services
+  - endpoints
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - update
+  - patch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  - networking.k8s.io
+  resources:
+  - ingresses
+  - ingressclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  - networking.k8s.io
+  resources:
+  - ingresses/status
+  verbs:
+  - update
+  - patch
+- apiGroups:
+  - tkc.a10networks.com
+  resources:
+  # Core SLB Resources
+  - virtualservers
+  - servicegroups
+  - healthmonitors
+  - virtualports
+  # SSL/TLS Resources
+  - sslcerts
+  - ssltemplates
+  - clientssls
+  - serverssls
+  # Template Resources
+  - templateexternalservices
+  - templatepolicies
+  - templatepersistsourceips
+  - templatepersistcookies
+  - templatetcpproxies
+  - templatetcps
+  - templateudps
+  - templatehttps
+  - templatehttppolicies
+  - templatevirtualports
+  - templateservers
+  - templateslbservers
+  - templateports
+  - templateciphers
+  # NAT and Persistence
+  - natpools
+  - persistencetemplates
+  # Access Control
+  - accessliststandards
+  - accesslistextendeds
+  # Health Monitoring
+  - healthmonitortemplates
+  # IP Pool Management
+  - a10ippools
+  # HA Configuration
+  - activeactivehadevices
+  # Deployment Configuration
+  - deploymentconfigs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - tkc.a10networks.com
+  resources:
+  # Status subresources for all CRDs
+  - virtualservers/status
+  - servicegroups/status
+  - healthmonitors/status
+  - virtualports/status
+  - clientssls/status
+  - serverssls/status
+  - templateexternalservices/status
+  - templatepolicies/status
+  - natpools/status
+  - accessliststandards/status
+  verbs:
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "a10-tkc.fullname" . }}-clusterrolebinding
+  labels:
+    {{- include "a10-tkc.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "a10-tkc.fullname" . }}-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: {{ include "a10-tkc.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -1,0 +1,22 @@
+{{- if .Values.serviceGroup.enabled -}}
+---
+apiVersion: tkc.a10networks.com/v1
+kind: ServiceGroup
+metadata:
+  name: {{ .Values.serviceGroup.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-slb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  name: {{ .Values.serviceGroup.name | quote }}
+  protocol: {{ .Values.serviceGroup.protocol | quote }}
+  loadBalanceMethod: {{ .Values.serviceGroup.lbMethod | quote }}
+  service: {{ .Values.serviceGroup.serviceRef.name | quote }}
+  {{- if .Values.serviceGroup.healthMonitor }}
+  healthCheck: {{ .Values.serviceGroup.healthMonitor | quote }}
+  {{- end }}
+{{- end }}

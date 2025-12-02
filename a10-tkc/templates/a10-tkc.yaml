@@ -1,0 +1,129 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "a10-tkc.fullname" . }}
+  namespace: {{ .Values.tkc.namespace }}
+  labels:
+    {{- include "a10-tkc.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "a10-tkc.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/a10-secret.yaml") . | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "a10-tkc.selectorLabels" . | nindent 8 }}
+        app: a10-tkc
+        component: controller
+        version: {{ .Chart.AppVersion | quote }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "a10-tkc.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTROLLER_URL
+          value: {{ .Values.thunder.protocol }}://{{ .Values.thunder.host }}
+        - name: ACOS_USERNAME_PASSWORD_SECRETNAME
+          value: {{ include "a10-tkc.fullname" . }}-secret
+        - name: THUNDER_HOST
+          value: {{ .Values.thunder.host | quote }}
+        - name: THUNDER_PORT
+          value: {{ .Values.thunder.port | quote }}
+        - name: THUNDER_PROTOCOL
+          value: {{ .Values.thunder.protocol | quote }}
+        - name: THUNDER_PARTITION
+          value: {{ .Values.thunder.partition | quote }}
+        - name: THUNDER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "a10-tkc.fullname" . }}-secret
+              key: username
+        - name: THUNDER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "a10-tkc.fullname" . }}-secret
+              key: password
+        - name: LOG_LEVEL
+          value: {{ .Values.tkc.logLevel | quote }}
+        - name: ENABLE_LEADER_ELECTION
+          value: "true"
+        - name: LEADER_ELECTION_NAMESPACE
+          value: {{ .Release.Namespace | quote }}
+        {{- if .Values.tkc.watchNamespaces }}
+        - name: WATCH_NAMESPACES
+          value: {{ .Values.tkc.watchNamespaces | join "," | quote }}
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: log-volume
+          mountPath: /var/log/a10
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: log-volume
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

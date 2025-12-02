@@ -1,0 +1,92 @@
+{{/*
+Cleanup Job for pre-delete hook
+This job deletes hook-created resources (HealthMonitor, ServiceGroup, VirtualServer)
+when the Helm release is uninstalled
+*/}}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "a10-slb.fullname" . }}-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-slb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "a10-slb.fullname" . }}-cleanup
+      labels:
+        {{- include "a10-slb.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "a10-slb.fullname" . }}-cleanup
+      restartPolicy: Never
+      containers:
+      - name: cleanup
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+            echo "========================================="
+            echo "A10 SLB Cleanup Job"
+            echo "Release: {{ .Release.Name }}"
+            echo "Namespace: {{ .Release.Namespace }}"
+            echo "========================================="
+            echo ""
+
+            echo "Deleting hook-created resources..."
+            echo ""
+
+            {{- if .Values.healthMonitor.enabled }}
+            echo "→ Deleting HealthMonitor: {{ .Values.healthMonitor.name }}"
+            kubectl delete healthmonitor {{ .Values.healthMonitor.name }} \
+              -n {{ .Release.Namespace }} \
+              --ignore-not-found=true \
+              --wait=true \
+              --timeout=60s
+            if [ $? -eq 0 ]; then
+              echo "  ✓ HealthMonitor deleted successfully"
+            else
+              echo "  ⚠ Failed to delete HealthMonitor (may not exist)"
+            fi
+            echo ""
+            {{- end }}
+
+            {{- if .Values.serviceGroup.enabled }}
+            echo "→ Deleting ServiceGroup: {{ .Values.serviceGroup.name }}"
+            kubectl delete servicegroup {{ .Values.serviceGroup.name }} \
+              -n {{ .Release.Namespace }} \
+              --ignore-not-found=true \
+              --wait=true \
+              --timeout=60s
+            if [ $? -eq 0 ]; then
+              echo "  ✓ ServiceGroup deleted successfully"
+            else
+              echo "  ⚠ Failed to delete ServiceGroup (may not exist)"
+            fi
+            echo ""
+            {{- end }}
+
+            {{- if .Values.virtualServer.enabled }}
+            echo "→ Deleting VirtualServer: {{ .Values.virtualServer.name }}"
+            kubectl delete virtualserver {{ .Values.virtualServer.name }} \
+              -n {{ .Release.Namespace }} \
+              --ignore-not-found=true \
+              --wait=true \
+              --timeout=60s
+            if [ $? -eq 0 ]; then
+              echo "  ✓ VirtualServer deleted successfully"
+            else
+              echo "  ⚠ Failed to delete VirtualServer (may not exist)"
+            fi
+            echo ""
+            {{- end }}
+
+            echo "========================================="
+            echo "Cleanup completed successfully"
+            echo "========================================="

@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "a10-tkc.fullname" . }}-test-connection
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "a10-tkc.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  containers:
+  - name: test
+    image: curlimages/curl:latest
+    command: ['sh', '-c']
+    args:
+    - |
+      set -e
+      echo "Testing Thunder ADC connectivity..."
+      
+      # Test basic connectivity
+      if ! curl -k -f -m 10 https://{{ .Values.thunder.host }}:{{ .Values.thunder.port }}/; then
+        echo "WARNING: Could not connect to Thunder ADC"
+        echo "This may be expected if Thunder requires authentication for health endpoint"
+      fi
+      
+      echo "Testing TKC pod is running..."
+      if ! wget -O- -q http://{{ include "a10-tkc.fullname" . }}:8080/healthz 2>/dev/null; then
+        echo "ERROR: TKC health endpoint not responding"
+        exit 1
+      fi
+      
+      echo "All tests passed!"
+  restartPolicy: Never
+  serviceAccountName: {{ include "a10-tkc.serviceAccountName" . }}

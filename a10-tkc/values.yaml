@@ -1,0 +1,80 @@
+# Default values for a10-tkc Helm chart
+
+# Replica count for TKC deployment
+replicaCount: 1
+
+# TKC Container Image Configuration
+image:
+  repository: a10networks/a10-kubernetes-connector
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Service Account Configuration
+# Automatically creates a ServiceAccount with proper RBAC bindings
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# RBAC Configuration
+# Creates ClusterRole and ClusterRoleBinding for TKC operator
+rbac:
+  create: true
+
+podAnnotations: {}
+
+# Pod Disruption Budget
+# Ensures availability during cluster operations
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Network Policy
+# Restricts egress to Thunder ADC, Kubernetes API, and DNS only
+networkPolicy:
+  enabled: true
+
+# Pre-Install Validation
+# Validates Thunder ADC connectivity before installation
+preInstallValidation:
+  enabled: false
+
+# ServiceMonitor for Prometheus Operator
+serviceMonitor:
+  enabled: false
+
+# A10 Thunder ADC Configuration
+# Management interface connection details
+thunder:
+  host: "10.98.252.40"
+  port: 443
+  username: "admin"
+  password: "Clezionh25!1"
+  protocol: "https"
+  partition: "shared"
+
+# A10 TKC Specific Configuration
+# Log level: DEBUG, INFO, WARNING, ERROR
+# watchNamespaces: empty list means watch all namespaces
+tkc:
+  logLevel: "INFO"
+  watchNamespaces: []
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+# Pod scheduling configuration
+nodeSelector: {}
+tolerations: []
+affinity: {}

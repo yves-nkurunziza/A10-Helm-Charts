@@ -1,0 +1,45 @@
+apiVersion: v1
+entries:
+  a10-slb:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-12-02T11:16:05.273912016Z"
+    description: A10 Thunder Server Load Balancer configuration resources
+    digest: dd0b7a1a96e7a21714dd96cde6d1b6d044865925b754fcc723531d276a40d331
+    keywords:
+    - a10
+    - thunder
+    - load-balancer
+    - adc
+    - slb
+    maintainers:
+    - name: A10 Networks
+    name: a10-slb
+    type: application
+    urls:
+    - https://yves-nkurunziza.github.io/A10-Helm-Charts/charts/a10-slb-1.0.5.tgz
+    version: 1.0.5
+  a10-tkc:
+  - apiVersion: v2
+    appVersion: 1.11.0.0
+    created: "2025-12-02T11:16:05.275508564Z"
+    description: A Helm chart for deploying A10 Thunder Kubernetes Connector (TKC)
+    digest: d30dccd59be8cb57521db7edd2b41a874a2209e87e00c308459e7083b936b240
+    home: https://www.a10networks.com/
+    icon: https://www.a10networks.com/wp-content/uploads/A10-Networks-logo.svg
+    keywords:
+    - a10
+    - thunder
+    - load-balancer
+    - tkc
+    - kubernetes-connector
+    maintainers:
+    - name: A10 Networks
+    name: a10-tkc
+    sources:
+    - https://github.com/a10networks/thunder-kubernetes-connector
+    type: application
+    urls:
+    - https://yves-nkurunziza.github.io/A10-Helm-Charts/charts/a10-tkc-1.1.1.tgz
+    version: 1.1.1
+generated: "2025-12-02T11:16:05.273392253Z"

@@ -1,0 +1,14 @@
+apiVersion: v2
+name: a10-slb
+description: A10 Thunder Server Load Balancer configuration resources
+type: application
+version: 1.0.5
+appVersion: "1.0.0"
+keywords:
+  - a10
+  - thunder
+  - load-balancer
+  - adc
+  - slb
+maintainers:
+  - name: A10 Networks

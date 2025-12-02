@@ -1,0 +1,13 @@
+# Minimal Example - Real Infrastructure
+
+thunder:
+  host: "10.98.252.40"  # A10 Thunder ADC management IP
+  port: 443
+  username: "admin"
+  password: "Clezionh25!1"
+  protocol: "https"
+  partition: "shared"
+
+tkc:
+  logLevel: "INFO"
+  watchNamespaces: []

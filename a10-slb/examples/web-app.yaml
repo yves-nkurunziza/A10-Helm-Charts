@@ -1,0 +1,34 @@
+# Web Application Load Balancer
+# VIP: 172.28.3.20
+# Backend: web-service in production namespace
+
+healthMonitor:
+  enabled: true
+  name: "hm-web"
+  type: "http"
+  method: "GET"
+  url: "/"
+  statusCode: 200
+
+serviceGroup:
+  enabled: true
+  name: "sg-web"
+  protocol: "tcp"
+  lbMethod: "round-robin"
+  serviceRef:
+    name: "web-service"
+    namespace: "production"
+  healthMonitor: "hm-web"
+
+virtualServer:
+  enabled: true
+  name: "vs-web"
+  ipAddress: "172.28.3.20"
+
+virtualPort:
+  enabled: true
+  name: "vport-80"
+  port: 80
+  protocol: "http"
+  serviceGroup: "sg-web"
+  virtualServerName: "vs-web"
